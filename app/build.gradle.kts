@@ -2,6 +2,8 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
+    id("com.google.dagger.hilt.android")
+    id("kotlin-kapt")
 }
 
 android {
@@ -63,6 +65,10 @@ dependencies {
     implementation("androidx.recyclerview:recyclerview:1.3.2")
     
     // CardView 支持（用于 ViewHolder 演示）
+    // Hilt 依赖注入
+    implementation("com.google.dagger:hilt-android:2.51")
+    kapt("com.google.dagger:hilt-android-compiler:2.51")
+    
     implementation("androidx.cardview:cardview:1.0.0")
     
     testImplementation(libs.junit)

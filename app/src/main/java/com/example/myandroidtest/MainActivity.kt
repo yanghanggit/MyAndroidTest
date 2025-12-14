@@ -4,13 +4,18 @@ import android.os.Bundle
 import android.util.Log
 import androidx.appcompat.app.AppCompatActivity
 import com.example.myandroidtest.fragment.UserListFragment
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * MainActivity 现在作为 Fragment 的容器
  * 使用 Fragment 实现模块化的 UI 架构
  * 
- * 当前展示：RecyclerView + ViewHolder + MVVM 完整架构演示
+ * @AndroidEntryPoint: 标记这个 Activity 使用 Hilt
+ * 这是必须的，因为内部的 Fragment 使用了 Hilt
+ * 
+ * 当前展示：RecyclerView + ViewHolder + MVVM + Hilt 完整架构演示
  */
+@AndroidEntryPoint
 class MainActivity : AppCompatActivity() {
     
     override fun onCreate(savedInstanceState: Bundle?) {

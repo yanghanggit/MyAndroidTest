@@ -7,10 +7,20 @@ import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.example.myandroidtest.data.repository.UserRepository
 import com.example.myandroidtest.model.User
+import dagger.hilt.android.lifecycle.HiltViewModel
 import kotlinx.coroutines.launch
+import javax.inject.Inject
 
 /**
  * 用户列表 ViewModel
+ * 
+ * @HiltViewModel: 标记这是一个由 Hilt 管理的 ViewModel
+ * @Inject constructor: 告诉 Hilt 使用构造函数注入依赖
+ * 
+ * Hilt 会自动：
+ * 1. 创建 ViewModel 实例
+ * 2. 注入 UserRepository 依赖
+ * 3. 管理 ViewModel 生命周期
  * 
  * 职责：
  * 1. 从 Repository 获取数据
@@ -23,7 +33,8 @@ import kotlinx.coroutines.launch
  * - 屏幕旋转时数据不会丢失
  * - Activity/Fragment 销毁时才被清除
  */
-class UserListViewModel(
+@HiltViewModel
+class UserListViewModel @Inject constructor(
     private val repository: UserRepository
 ) : ViewModel() {
 

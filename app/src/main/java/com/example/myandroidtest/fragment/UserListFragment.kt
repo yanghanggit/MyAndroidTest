@@ -7,29 +7,32 @@ import android.view.View
 import android.view.ViewGroup
 import android.widget.TextView
 import androidx.fragment.app.Fragment
-import androidx.lifecycle.ViewModelProvider
+import androidx.fragment.app.viewModels
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.example.myandroidtest.R
 import com.example.myandroidtest.adapter.UserAdapter
-import com.example.myandroidtest.data.repository.UserRepository
-import com.example.myandroidtest.data.source.MockUserDataSource
 import com.example.myandroidtest.model.User
 import com.example.myandroidtest.viewmodel.UserListViewModel
-import com.example.myandroidtest.viewmodel.UserListViewModelFactory
+import dagger.hilt.android.AndroidEntryPoint
 
 /**
  * UserListFragment - 展示用户列表
  * 
- * 架构升级：完整的 MVVM + Repository 模式
+ * @AndroidEntryPoint: 标记这个 Fragment 使用 Hilt 进行依赖注入
+ * 
+ * 架构升级：完整的 MVVM + Repository + Hilt 模式
  * 
  * 架构层次：
  * Fragment (UI) → ViewModel (业务逻辑) → Repository (数据层) → DataSource (数据源)
+ *                     ↑
+ *                 Hilt 自动注入
  * 
  * 这个例子展示了：
  * 1. RecyclerView + ViewHolder 的真正使用场景
  * 2. MVVM 架构的完整实现
- * 3. 关注点分离：UI、业务逻辑、数据层各司其职
+ * 3. Hilt 依赖注入的使用
+ * 4. 关注点分离：UI、业务逻辑、数据层各司其职
  * 
  * 关键观察点：
  * 1. 创建了 50 个用户数据，但只会创建约 10-15 个 ViewHolder
@@ -40,12 +43,15 @@ import com.example.myandroidtest.viewmodel.UserListViewModelFactory
  * - 没有 ViewHolder：50 个 item × 每次滑动都 findViewById = 极慢
  * - 有 ViewHolder：创建 15 个 ViewHolder × findViewById 一次 = 极快
  */
+@AndroidEntryPoint
 class UserListFragment : Fragment() {
 
     private lateinit var recyclerView: RecyclerView
     private lateinit var tvStats: TextView
     private lateinit var userAdapter: UserAdapter
-    private lateinit var viewModel: UserListViewModel
+    
+    // Hilt 自动注入 ViewModel
+    private val viewModel: UserListViewModel by viewModels()
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -62,7 +68,7 @@ class UserListFragment : Fragment() {
         // 初始化视图
         setupViews(rootView)
         
-        // 初始化 ViewModel
+        // 打印 ViewModel 信息
         setupViewModel()
         
         // 观察数据变化
@@ -90,18 +96,19 @@ class UserListFragment : Fragment() {
     /**
      * 初始化 ViewModel
      * 
-     * 使用 ViewModelProvider.Factory 创建 ViewModel，支持依赖注入
+     * ✨ Hilt 简化：
+     * 之前需要手动创建 DataSource、Repository、Factory
+     * 现在 Hilt 自动注入，只需要 by viewModels()
+     * 
+     * 依赖链由 Hilt 自动管理：
+     * DataModule.provideUserDataSource() → MockUserDataSource
+     * DataModule.provideUserRepository(dataSource) → UserRepository
+     * @Inject UserListViewModel(repository) → 自动注入
      */
     private fun setupViewModel() {
-        // 创建数据源 → Repository → ViewModel 的依赖链
-        val dataSource = MockUserDataSource()  // 📌 当前使用 Mock 数据源
-        val repository = UserRepository(dataSource)
-        val factory = UserListViewModelFactory(repository)
-        
-        viewModel = ViewModelProvider(this, factory)[UserListViewModel::class.java]
-        
-        Log.d("UserListFragment", "ViewModel 已初始化")
+        Log.d("UserListFragment", "ViewModel 已由 Hilt 自动注入")
         Log.d("UserListFragment", "数据源：MockUserDataSource (模拟数据)")
+        Log.d("UserListFragment", "💡 切换数据源只需修改 DataModule")
     }
 
     /**
