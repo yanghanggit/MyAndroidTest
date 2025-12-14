@@ -9,12 +9,7 @@ import com.example.myandroidtest.fragment.UserListFragment
  * MainActivity 现在作为 Fragment 的容器
  * 使用 Fragment 实现模块化的 UI 架构
  * 
- * 当前展示：RecyclerView + ViewHolder 真实场景演示
- * 
- * 其他可用的演示：
- * - UserListFragment() - RecyclerView 列表（当前）
- * - ViewHolderDemoFragment() - ViewHolder 基础概念
- * - UserFragment() - MVVM 架构演示
+ * 当前展示：RecyclerView + ViewHolder + MVVM 完整架构演示
  */
 class MainActivity : AppCompatActivity() {
     

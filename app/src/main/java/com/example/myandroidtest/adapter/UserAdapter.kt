@@ -136,9 +136,9 @@ class UserAdapter(private val userList: List<User>) :
          */
         fun bind(user: User) {
             // 直接使用缓存的引用，快速赋值
-            tvName.text = "姓名: ${user.name}"
-            tvEmail.text = "邮箱: ${user.email}"
-            tvAge.text = "年龄: ${user.age} 岁"
+            tvName.text = itemView.context.getString(R.string.user_name_format, user.name)
+            tvEmail.text = itemView.context.getString(R.string.user_email_format, user.email)
+            tvAge.text = itemView.context.getString(R.string.user_age_format, user.age)
             
             Log.d("UserViewHolder", "      ✅ 数据已绑定（使用缓存的控件引用）")
         }
