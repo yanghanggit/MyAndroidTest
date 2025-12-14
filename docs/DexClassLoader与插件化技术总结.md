@@ -25,7 +25,7 @@ class DexClassLoader(
 
 ### 工作原理
 
-```
+```text
 APK/JAR 文件（本地）
     ↓
 DexClassLoader 读取
@@ -61,7 +61,7 @@ val instance = pluginClass.newInstance()
 
 ### 在插件化框架中的应用
 
-```
+```text
 宿主 APP 启动
     ↓
 下载插件 APK 到本地
@@ -85,11 +85,13 @@ val instance = pluginClass.newInstance()
 ### 安全注意事项
 
 #### 风险
+
 - 加载的代码来源必须可信
 - 可能被用于加载恶意代码
 - 需要验证插件的签名和完整性
 
 #### 最佳实践
+
 ```kotlin
 // 1. 验证插件签名
 fun verifyPluginSignature(apkPath: String): Boolean {
@@ -117,13 +119,15 @@ ReLinker 是一个 Android 开源库，专门用于可靠地加载 native 库（
 
 ### 核心问题
 
-**Android 原生加载方式的问题**
+#### Android 原生加载方式的问题
+
 ```kotlin
 // 原生方式
 System.loadLibrary("native-lib")
 ```
 
 在某些设备（特别是旧版本或定制 ROM）上可能出现：
+
 - `UnsatisfiedLinkError`：找不到 so 库
 - ABI 兼容性问题
 - 库损坏无法加载
@@ -132,16 +136,19 @@ System.loadLibrary("native-lib")
 ### ReLinker 的作用
 
 #### 1. 自动重试机制
+
 ```kotlin
 // 使用 ReLinker
 ReLinker.loadLibrary(context, "native-lib")
 ```
+
 - 如果首次加载失败，会尝试从 APK 中提取 so 文件
 - 复制到私有目录后重新加载
 - 自动处理加载异常
 
 #### 2. 解决 ABI 兼容性
-```
+
+```text
 APK 包含多个 ABI 的 so 库：
 ├── lib/
 │   ├── armeabi-v7a/libnative.so
@@ -149,25 +156,30 @@ APK 包含多个 ABI 的 so 库：
 │   ├── x86/libnative.so
 │   └── x86_64/libnative.so
 ```
+
 - 某些设备可能选错 ABI 版本
 - ReLinker 会尝试所有兼容的 ABI
 
 #### 3. 处理库损坏
+
 - 检测 so 文件是否完整
 - 损坏时重新提取
 
 #### 4. 递归加载依赖
+
 ```kotlin
 // 加载有依赖关系的库
 ReLinker.recursively()
     .loadLibrary(context, "child-lib")
 ```
+
 - 自动加载 so 库的依赖库
 - 按正确顺序加载
 
-### 使用示例
+### ReLinker 使用示例
 
 #### 基本使用
+
 ```kotlin
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -185,6 +197,7 @@ class MainActivity : AppCompatActivity() {
 ```
 
 #### 高级配置
+
 ```kotlin
 ReLinker.recursively()  // 递归加载依赖
     .log { message -> Log.d("ReLinker", message) }  // 日志
@@ -207,25 +220,29 @@ dependencies {
 }
 ```
 
-### 应用场景
+### ReLinker 应用场景
 
 #### 1. NDK 开发
+
 - 所有使用 JNI 的项目
 - 游戏引擎（Unity、Cocos2d-x 等）
 - 音视频处理库
 
 #### 2. 插件化框架
+
 - 插件包含 native 库时
 - 动态加载 so 文件
 - 避免不同设备上的加载问题
 
 #### 3. 第三方 SDK 集成
+
 - 第三方 SDK 包含 so 库
 - 提高兼容性和稳定性
 
 ### 与插件化的关系
 
-**在插件化场景中的应用**
+#### 在插件化场景中的应用
+
 ```kotlin
 // 加载插件 APK
 val classLoader = DexClassLoader(pluginPath, ...)
@@ -234,8 +251,9 @@ val classLoader = DexClassLoader(pluginPath, ...)
 ReLinker.loadLibrary(context, "plugin-native-lib")
 ```
 
-**问题场景**
-```
+#### 问题场景
+
+```text
 插件 APK 包含 so 库
     ↓
 通过 DexClassLoader 加载插件
@@ -247,9 +265,9 @@ ReLinker.loadLibrary(context, "plugin-native-lib")
 使用 ReLinker 解决
 ```
 
-### 工作原理
+### ReLinker 工作原理
 
-```
+```text
 1. 尝试 System.loadLibrary()
    ↓ 失败
 2. 从 APK 中提取 so 文件
@@ -267,7 +285,7 @@ ReLinker.loadLibrary(context, "plugin-native-lib")
 
 ### 层次关系
 
-```
+```text
 ┌─────────────────────────────────────┐
 │         Shadow 插件化框架            │  ← 上层：完整解决方案
 │  (封装、组件管理、生命周期)          │
@@ -287,6 +305,7 @@ ReLinker.loadLibrary(context, "plugin-native-lib")
 #### 1. Shadow = 完整框架（依赖 DexClassLoader）
 
 Shadow **内部使用** DexClassLoader 来加载插件：
+
 ```kotlin
 // Shadow 框架内部实现（简化）
 class ShadowPluginLoader {
@@ -310,7 +329,8 @@ class ShadowPluginLoader {
 }
 ```
 
-**Shadow 做的事情**
+Shadow 的功能包括：
+
 - ✅ 使用 DexClassLoader 加载代码（底层技术）
 - ✅ 管理插件生命周期
 - ✅ 处理资源加载
@@ -321,6 +341,7 @@ class ShadowPluginLoader {
 #### 2. DexClassLoader = 独立的加载工具
 
 可以**单独使用**，不依赖任何框架：
+
 ```kotlin
 // 直接使用 DexClassLoader（不需要 Shadow）
 val classLoader = DexClassLoader(pluginPath, ...)
@@ -338,6 +359,7 @@ val instance = pluginClass.newInstance()
 #### 3. ReLinker = 独立的辅助工具
 
 可以**单独使用**，也可以**不使用**：
+
 ```kotlin
 // 场景1：只有 DexClassLoader，插件不包含 so
 val classLoader = DexClassLoader(...)  // ✅ 够用
@@ -354,6 +376,7 @@ ReLinker.loadLibrary(context, "plugin-lib")
 ### 组合使用场景
 
 #### 场景 A：只用 DexClassLoader
+
 ```kotlin
 // 简单场景：加载纯 Java/Kotlin 代码
 val classLoader = DexClassLoader(pluginPath, ...)
@@ -362,6 +385,7 @@ val utils = classLoader.loadClass("PluginUtils").newInstance()
 ```
 
 #### 场景 B：DexClassLoader + ReLinker
+
 ```kotlin
 // 插件包含 native 库
 val classLoader = DexClassLoader(pluginPath, ...)
@@ -370,6 +394,7 @@ ReLinker.loadLibrary(context, "plugin-native")
 ```
 
 #### 场景 C：Shadow 框架（完整方案）
+
 ```kotlin
 // 复杂场景：完整的插件化应用
 PluginManager.loadPlugin("plugin.apk")
@@ -382,6 +407,7 @@ PluginManager.startPluginActivity("MainActivity")
 ```
 
 #### 场景 D：Shadow + ReLinker（企业级方案）
+
 ```kotlin
 // 大型项目：插件包含 Activity + native 库
 // Shadow 负责框架层面
@@ -395,7 +421,7 @@ ReLinker.loadLibrary(context, "plugin-native")
 
 ### 依赖关系图
 
-```
+```text
 Shadow 框架
     ├── 必须依赖 → DexClassLoader (Android 系统提供)
     └── 可选配合 → ReLinker (如果插件有 so 库)
@@ -410,7 +436,7 @@ ReLinker
 
 ### 类比理解
 
-```
+```text
 Shadow       = 完整的房屋建筑系统（包工头 + 工人 + 工具）
 DexClassLoader = 吊车（核心工具，搬运材料）
 ReLinker     = 螺丝刀（辅助工具，特定场景需要）
@@ -424,31 +450,37 @@ ReLinker     = 螺丝刀（辅助工具，特定场景需要）
 ### 技术选择建议
 
 #### 简单需求（加载工具类）
+
 ```kotlin
 只用 DexClassLoader ✅
 ```
 
-**适合场景**：
+适合场景：
+
 - 加载纯 Java/Kotlin 工具类
 - 简单的业务逻辑模块
 - 不涉及 Android 组件
 
 #### 中等需求（插件有 Activity 但没有 so）
+
 ```kotlin
 使用 Shadow 框架 ✅
 ```
 
-**适合场景**：
+适用场景：
+
 - 需要动态加载 Activity/Service 等组件
 - 需要完整的生命周期管理
 - 需要访问插件资源
 
 #### 复杂需求（完整插件 + native 库）
+
 ```kotlin
 Shadow + ReLinker ✅
 ```
 
-**适合场景**：
+应用场景：
+
 - 大型插件化应用
 - 插件包含 JNI 代码
 - 需要最高稳定性和兼容性
@@ -458,18 +490,21 @@ Shadow + ReLinker ✅
 ## 四、核心技术总结
 
 ### DexClassLoader
+
 - **定位**：Android 系统提供的动态类加载器
 - **作用**：加载未安装 APK 中的代码
 - **优势**：系统原生支持，性能好
 - **局限**：只负责加载代码，不管理组件生命周期
 
 ### ReLinker
+
 - **定位**：第三方 native 库加载工具
 - **作用**：可靠加载 .so 文件
 - **优势**：解决设备兼容性问题，自动重试
 - **局限**：只负责 so 加载，不涉及 dex
 
 ### Shadow
+
 - **定位**：完整的插件化解决方案
 - **作用**：插件管理、组件生命周期、资源加载
 - **优势**：功能完整，稳定性高，零反射
@@ -480,25 +515,27 @@ Shadow + ReLinker ✅
 ## 五、实践建议
 
 ### 1. 技术栈选择
+
 - **小型项目**：DexClassLoader 足够
 - **中型项目**：考虑使用插件化框架
 - **大型项目**：Shadow + ReLinker 全套方案
 
 ### 2. 安全性
+
 - 始终验证插件签名
 - 检查文件完整性（Hash）
 - 来源必须可信
 
 ### 3. 性能优化
+
 - 预加载常用插件
 - 缓存 ClassLoader 实例
 - 延迟初始化 native 库
 
 ### 4. 兼容性
+
 - 测试多种设备和 Android 版本
 - 使用 ReLinker 提高 so 加载成功率
 - 关注 Android 系统更新对 DexClassLoader 的影响
 
 ---
-
-*文档生成日期：2025年12月14日*
