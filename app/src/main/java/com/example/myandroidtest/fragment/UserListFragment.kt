@@ -68,9 +68,6 @@ class UserListFragment : Fragment() {
         // 初始化视图
         setupViews(rootView)
         
-        // 打印 ViewModel 信息
-        setupViewModel()
-        
         // 观察数据变化
         observeViewModel()
         
@@ -91,24 +88,6 @@ class UserListFragment : Fragment() {
         recyclerView.layoutManager = LinearLayoutManager(requireContext())
         
         Log.d("UserListFragment", "RecyclerView 已初始化")
-    }
-
-    /**
-     * 初始化 ViewModel
-     * 
-     * ✨ Hilt 简化：
-     * 之前需要手动创建 DataSource、Repository、Factory
-     * 现在 Hilt 自动注入，只需要 by viewModels()
-     * 
-     * 依赖链由 Hilt 自动管理：
-     * DataModule.provideUserDataSource() → MockUserDataSource
-     * DataModule.provideUserRepository(dataSource) → UserRepository
-     * @Inject UserListViewModel(repository) → 自动注入
-     */
-    private fun setupViewModel() {
-        Log.d("UserListFragment", "ViewModel 已由 Hilt 自动注入")
-        Log.d("UserListFragment", "数据源：MockUserDataSource (模拟数据)")
-        Log.d("UserListFragment", "💡 切换数据源只需修改 DataModule")
     }
 
     /**
