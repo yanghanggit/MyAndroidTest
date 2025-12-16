@@ -420,6 +420,79 @@ fun provideUserDataSource(): UserDataSource {
 }
 ```
 
+### 同一返回类型的 @Provides 方法限制
+
+**核心规则**：在同一作用域内，**同一返回类型的 @Provides 方法只能有一个**。
+
+```kotlin
+// ❌ 错误：两个方法都返回 UserDataSource
+@Provides
+@Singleton
+fun provideMockUserDataSource(): UserDataSource {
+    return MockUserDataSource()
+}
+
+@Provides
+@Singleton
+fun provideRemoteUserDataSource(): UserDataSource {
+    return RemoteUserDataSource()  // 编译错误！
+}
+```
+
+**原因**：Hilt 通过返回类型来识别依赖。如果有多个相同类型的提供方法，Hilt 无法确定该使用哪一个。
+
+#### 解决方案：使用 @Qualifier 注解
+
+当需要多个相同类型的实例时，使用 `@Qualifier` 来区分：
+
+```kotlin
+// 1. 定义自定义限定符
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class MockDataSource
+
+@Qualifier
+@Retention(AnnotationRetention.BINARY)
+annotation class RemoteDataSource
+
+// 2. 用限定符标记不同的提供方法
+@Provides
+@Singleton
+@MockDataSource
+fun provideMockUserDataSource(): UserDataSource {
+    return MockUserDataSource()
+}
+
+@Provides
+@Singleton
+@RemoteDataSource
+fun provideRemoteUserDataSource(): UserDataSource {
+    return RemoteUserDataSource()
+}
+
+// 3. 注入时指定使用哪一个
+@Provides
+@Singleton
+fun provideUserRepository(
+    @MockDataSource dataSource: UserDataSource  // 明确使用 Mock 版本
+): UserRepository {
+    return UserRepository(dataSource)
+}
+
+// 或者在 ViewModel 中直接注入
+@HiltViewModel
+class UserListViewModel @Inject constructor(
+    @RemoteDataSource private val repository: UserRepository  // 使用远程版本
+) : ViewModel()
+```
+
+**适用场景**：
+
+- ✅ 一个类型一个提供方法 → 直接使用，无需 @Qualifier
+- ✅ 一个类型多个提供方法 → 必须用 @Qualifier 区分
+- ✅ 同时支持多种数据源（Mock/Remote/Cache）
+- ✅ 根据不同场景使用不同实现
+
 ### 查看生成的代码
 
 ```text
@@ -441,5 +514,5 @@ fun provideUserDataSource(): UserDataSource {
 
 ---
 
-**学习日期**：2025年12月15日  
-**关键字**：Android, Hilt, 依赖注入, DI, MVVM, Application, Activity, @HiltAndroidApp, @Module, @Provides, @Singleton, @Inject
+**学习日期**：2025年12月15日 - 2025年12月16日  
+**关键字**：Android, Hilt, 依赖注入, DI, MVVM, Application, Activity, @HiltAndroidApp, @Module, @Provides, @Singleton, @Inject, @Qualifier
